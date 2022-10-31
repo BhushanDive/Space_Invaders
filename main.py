@@ -1,7 +1,7 @@
 import pygame
 import random
 import math
-
+from pygame import mixer
 # Initializing the game
 pygame.init()
 
@@ -10,6 +10,10 @@ screen = pygame.display.set_mode((800, 600))
 
 # Background for the game
 background = pygame.image.load("Images/background.png")
+
+# Background Music
+mixer.music.load('sounds/background.wav')
+mixer.music.play(-1)
 
 # Title and Icon
 pygame.display.set_caption("Space Invaders")
@@ -50,14 +54,21 @@ bullet_state = "ready"
 
 # Score
 score_value = 0
-font = pygame.font.Font(None,70)
+font = pygame.font.SysFont('freesansbold.ttf',32)
 
 textX = 10
 textY = 10
 
+# Game Over text
+over_font = pygame.font.SysFont('freesansbold.ttf',64)
+
 def show_score(x,y):
     score = font.render("Score : " + str(score_value),True, (255,255,255))
     screen.blit(score,(x,y))
+
+def game_over_text():
+    over_text = over_font.render("GAME OVER", True,(255,255,255))
+    screen.blit(over_text,(250,250))
 def player(x, y):
     screen.blit(playerImg, (x, y))
 
@@ -95,6 +106,8 @@ while running:
                 playerX_change = 5.0
             if event.key == pygame.K_SPACE:
                 if bullet_state == "ready":
+                    bullet_sound = mixer.Sound('sounds/laser.wav')
+                    bullet_sound.play()
                     bulletX = playerX
                     fire_bullet(bulletX,bulletY)
         if event.type == pygame.KEYUP:
@@ -111,6 +124,14 @@ while running:
 
     # Enemy Movement
     for i in range(number_of_enemies):
+
+        # Game Over
+        if enemyY[i] > 440:
+            for j in range(number_of_enemies):
+                enemyY[j] = 2000
+            game_over_text()
+            break
+
         enemyX[i] += enemyX_change[i]
         if enemyX[i] <= 0:
             enemyX_change[i] = 4
@@ -122,6 +143,8 @@ while running:
         # Collision
         collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
         if collision == True:
+            explosion_sound = mixer.Sound('sounds/explosion.wav')
+            explosion_sound.play()
             bulletY = 480
             bullet_state = "ready"
             score_value += 1
